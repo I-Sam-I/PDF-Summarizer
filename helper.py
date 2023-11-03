@@ -29,13 +29,13 @@ def get_args() -> Namespace:
 
 
 def OCR_pdf(file: str) -> str:
-    """Converts standard PDF to OCR PDF/A which can be read by PyPDF2
+    """Converts standard PDF to OCR PDF which can be read by PyPDF2
 
     Args:
-        file (str): The filename of the PDF/A
+        file (str): The filename of the PDF
 
     Returns:
-        str: The filename of the OCR PDF/A
+        str: The filename of the OCR PDF
     """
     print(f"OCR'ing {file}")
     system(f"ocrmypdf '{file}' '{file}' --deskew --skip-text --quiet")
@@ -44,13 +44,13 @@ def OCR_pdf(file: str) -> str:
 
 
 def get_pdf_text(file: str) -> list[str]:
-    """Reads the text from a PDF/A file
+    """Reads the text from a PDF file
 
     Args:
-        file (str): The filename of the PDF/A
+        file (str): The filename of the PDF
 
     Returns:
-        list[str]: The text from the PDF/A per page
+        list[str]: The text from the PDF per page
     """
     reader = PdfReader(OCR_pdf(file))
 
@@ -65,40 +65,24 @@ def get_pdf_text(file: str) -> list[str]:
 
 
 def summarize_text(text: list[str]) -> str:
-    load_dotenv()
-    openai.api_key = getenv("OPENAI_API_KEY")
-    
+    """Summarize the entire text
+
+    Args:
+        text (list[str]): The entire text to summarize
+
+    Returns:
+        str: The summarized text
+    """    
     print("Summarizing text")
     
     responses: list[str] = []
     for page in text:
-        
         try: 
-            responses.append(
-                openai.completions.create(
-                    model="gpt-3.5-turbo-instruct",
-                    prompt=f"Summarize the content you are given for a high school student. The text is {page}",
-                    temperature=0,
-                    max_tokens=4096 - len(page) // 3,
-                    top_p=1,
-                    frequency_penalty=0,
-                    presence_penalty=0
-                    ).choices[0].text
-                )
+            responses.append(get_gpt_response(page))
         except Exception as e:
             print("OpenAI API limit reached. Waiting 1 minute...")
             sleep(60)
-            responses.append(
-                openai.completions.create(
-                    model="gpt-3.5-turbo-instruct",
-                    prompt=f"Summarize the content you are given for a high school student. The text is {page}",
-                    temperature=0,
-                    max_tokens=4096 - len(page) // 3,
-                    top_p=1,
-                    frequency_penalty=0,
-                    presence_penalty=0
-                    ).choices[0].text
-                )
+            responses.append(get_gpt_response(page))
     
     print("Summarized text")
     return responses
@@ -120,3 +104,25 @@ def write_text(text: list[str], file: str) -> None:
     print(f"Wrote {file}")
 
 
+def get_gpt_response(text: str) -> str:
+    """Connects with the OpenAI API and returns the response
+
+    Args:
+        text (str): The text to summarize
+
+    Returns:
+        str: Summarized text
+    """
+    
+    load_dotenv()
+    openai.api_key = getenv("OPENAI_API_KEY")
+    
+    return openai.completions.create(
+        model="gpt-3.5-turbo-instruct",
+        prompt=f"Summarize the content you are given for a high school student. The text is {text}",
+        temperature=0,
+        max_tokens=4096 - len(text) // 3,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0
+    ).choices[0].text
