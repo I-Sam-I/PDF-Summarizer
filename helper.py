@@ -1,3 +1,4 @@
+# Weird OpenAI bug
 import collections 
 try:
     from collections.abc import MutableSet, MutableMapping
@@ -7,11 +8,12 @@ except Exception:
     from collections import MutableSet, MutableMapping
 
 from argparse import ArgumentParser, Namespace
-from PyPDF2 import PdfReader
-from os import system, getenv
-import openai
 from dotenv import load_dotenv
+import openai
+from os import system, getenv
+from PyPDF2 import PdfReader
 from time import sleep
+
 
 
 def get_args() -> Namespace:
@@ -121,7 +123,7 @@ def get_gpt_response(text: str) -> str:
         model="gpt-3.5-turbo-instruct",
         prompt=f"Summarize the content you are given for a high school student. The text is {text}",
         temperature=0,
-        max_tokens=4096 - len(text) // 3,
+        max_tokens=8192 - len(text) // 3,
         top_p=1,
         frequency_penalty=0,
         presence_penalty=0
