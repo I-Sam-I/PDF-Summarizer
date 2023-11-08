@@ -30,7 +30,7 @@ def main() -> None:
     
     # Summarize the text
     logger.info("Summarizing text.")
-    # text: list[str] = summarize_text(text)
+    text: list[str] = summarize_text(text)
     logger.info("Summarized text.")
     
     # Check if the output file is a text file
